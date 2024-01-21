@@ -1,20 +1,30 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 
+interface Journi {
+    content: string;
+    createdAt: string; // Assuming a string representation of a date
+    username: string;
+}
+
 function JourniApp() {
-    const [journiEntry, setJourniEntry] = useState('');
-    const [journis, setJournis] = useState([]);
+    const [journiEntry, setJourniEntry] = useState<string>('');
+    const [journis, setJournis] = useState<Journi[]>([]);
 
     useEffect(() => {
         // Retrieve journis from local storage
         const storedJournis = localStorage.getItem('journis');
         if (storedJournis) {
-            const parsedJournis = JSON.parse(storedJournis);
-            setJournis(parsedJournis.sort((a, b) => a.createdAt > b.createdAt));
+            const parsedJournis = JSON.parse(storedJournis) as Journi[];
+            setJournis(parsedJournis.sort((a, b) => {
+                const timestampA = new Date(a.createdAt).getTime(); // Get timestamp as a number
+                const timestampB = new Date(b.createdAt).getTime();
+                return timestampB - timestampA; // Now you can subtract numerical timestamps
+            }));
         }
     }, []);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         // Validate character limit
@@ -24,9 +34,10 @@ function JourniApp() {
         }
 
         // Create new journi object with timestamp
-        const newJourni = {
+        const newJourni: Journi = {
             content: journiEntry,
             createdAt: new Date().toISOString(),
+            username: 'Your Name', // Assuming a placeholder username
         };
 
         // Update journis state and local storage
@@ -56,7 +67,7 @@ function JourniApp() {
             <div className="flex flex-row w-full">
                 <div className="w-full md:w-3/4">
                     {journis.map((journi) => (
-                        <div key="{journi.content}" className="border-b-2 mb-4 p-10 space-y-4 flex flex-col">
+                        <div key={journi.content} className="border-b-2 mb-4 p-10 space-y-4 flex flex-col">
                             {/* Journi content without rounded corners */}
                             <div className="flex items-center">
                                 <img src="https://i.pravatar.cc/150?u=someuniqueid" alt="Placeholder" className="rounded-full w-10 h-10 mr-4" />
@@ -70,9 +81,9 @@ function JourniApp() {
                     ))}
                 </div>
                 <div className="hidden md:w-1/4 px-4">
+                    {/* Additional content for larger screens */}
                 </div>
             </div>
-
         </div>
     );
 }
